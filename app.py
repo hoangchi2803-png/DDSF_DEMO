@@ -277,64 +277,60 @@ def compute_shap_values(row):
 
 
 def waterfall_chart(baseline, shap_vals, pred):
-    """Draw SHAP waterfall using Plotly."""
+    """SHAP bar chart — delta contributions centered at 0."""
     items = sorted(shap_vals.items(), key=lambda x: abs(x[1]), reverse=True)[:8]
-    # Reverse so most important is at top
-    items = list(reversed(items))
+    items = list(reversed(items))   # most important at top
     labels = [k.replace("_", " ").title() for k, _ in items]
     vals   = [v for _, v in items]
-
     colors = ["#e05252" if v > 0 else "#52b0e0" for v in vals]
 
-    # Compute running totals for waterfall
-    running = baseline
-    lefts = []
-    for v in vals:
-        lefts.append(running)
-        running += v
-
     fig = go.Figure()
-
-    # Invisible base bars
     fig.add_trace(go.Bar(
-        x=lefts, y=labels, orientation="h",
-        marker=dict(color="rgba(0,0,0,0)"),
-        hoverinfo="skip", showlegend=False,
-    ))
-
-    # Actual value bars
-    fig.add_trace(go.Bar(
-        x=vals, y=labels, orientation="h",
-        marker=dict(color=colors),
-        text=[f"{v:+.4f}" for v in vals],
-        textposition="inside",
-        textfont=dict(color="white", size=12),
-        hovertemplate="%{y}: %{x:+.4f}<extra></extra>",
-        name="SHAP value",
+        x=vals, y=labels,
+        orientation="h",
+        marker=dict(color=colors, line=dict(width=0)),
+        text=[f"{v:+.5f}" for v in vals],
+        textposition="outside",
+        textfont=dict(color="white", size=11),
+        hovertemplate="<b>%{y}</b><br>SHAP: %{x:+.5f}<extra></extra>",
         showlegend=False,
     ))
 
-    # Baseline and prediction lines
-    fig.add_vline(x=baseline, line_dash="dash", line_color="#aaaaaa",
-                  annotation_text=f"Baseline={baseline:.3f}",
-                  annotation_font_color="#aaaaaa", annotation_position="top right")
-    fig.add_vline(x=pred, line_dash="solid", line_color="#f0c040",
-                  annotation_text=f"Prediction={pred:.3f}",
-                  annotation_font_color="#f0c040", annotation_position="top left")
+    # Zero reference line
+    fig.add_vline(x=0, line_color="#555", line_width=1.5)
+
+    # Annotation box: baseline and prediction
+    fig.add_annotation(
+        x=0.98, y=1.06, xref="paper", yref="paper",
+        text=f"<b>Baseline</b> {baseline:.3f} → <b>Prediction</b> {pred:.3f}  "
+             f"(Δ = {pred-baseline:+.3f})",
+        showarrow=False,
+        font=dict(size=12, color="#f0c040"),
+        align="right", bgcolor="#1a2744", bordercolor="#FF6600",
+        borderwidth=1, borderpad=6,
+    )
+
+    # Auto x-range with padding
+    max_abs = max(abs(v) for v in vals) if vals else 0.01
+    pad = max_abs * 1.8
 
     fig.update_layout(
-        barmode="stack",
-        paper_bgcolor="#0f1117",
-        plot_bgcolor="#0f1117",
-        font=dict(color="white", size=13),
-        height=420,
-        margin=dict(l=20, r=30, t=30, b=40),
+        paper_bgcolor="#0d1b2e",
+        plot_bgcolor="#0d1b2e",
+        font=dict(color="white", size=12),
+        height=380,
+        margin=dict(l=10, r=20, t=50, b=50),
         xaxis=dict(
-            title="SHAP value (impact on model output)",
-            color="white", gridcolor="#333",
-            zeroline=True, zerolinecolor="#555",
+            title="SHAP contribution (impact on P̂(SAR))",
+            color="#aaa", gridcolor="#1e3a5f",
+            zeroline=False,
+            range=[-pad, pad],
+            tickfont=dict(size=10),
         ),
-        yaxis=dict(color="white", tickfont=dict(size=13)),
+        yaxis=dict(
+            color="white", tickfont=dict(size=12), gridcolor="#1e3a5f",
+        ),
+        bargap=0.35,
     )
     return fig
 
