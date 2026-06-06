@@ -16,11 +16,103 @@ import plotly.graph_objects as go
 # PAGE CONFIG
 # ─────────────────────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="DDSF | AML Decision Support",
+    page_title="SMBC | AML Compliance Monitor",
     page_icon="🏦",
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# ── SMBC Brand CSS ────────────────────────────────────────────────────────────
+st.markdown("""
+<style>
+/* ── Global ── */
+html, body, [class*="css"] { font-family: 'Segoe UI', Arial, sans-serif; }
+
+/* ── Sidebar ── */
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #0d1b2e 0%, #122040 100%);
+    border-right: 1px solid #1e3a5f;
+}
+[data-testid="stSidebar"] * { color: #d0dde8 !important; }
+
+/* ── Top header strip ── */
+.bank-header {
+    background: linear-gradient(90deg, #0d1b2e 0%, #1a3a5c 100%);
+    border-bottom: 3px solid #FF6600;
+    padding: 10px 24px 8px 24px;
+    margin: -1rem -1rem 1.5rem -1rem;
+    display: flex; align-items: center; gap: 14px;
+}
+.bank-header .logo { font-size: 26px; }
+.bank-header .bank-name {
+    font-size: 20px; font-weight: 700;
+    color: #ffffff; letter-spacing: 0.5px;
+}
+.bank-header .module-name {
+    font-size: 12px; color: #FF6600;
+    font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+}
+
+/* ── KPI cards ── */
+.kpi-card {
+    background: #0d1b2e;
+    border: 1px solid #1e3a5f;
+    border-top: 3px solid #FF6600;
+    border-radius: 6px;
+    padding: 16px 20px;
+    text-align: center;
+}
+.kpi-label { font-size: 11px; color: #7a9abf; text-transform: uppercase;
+             letter-spacing: 0.8px; margin-bottom: 6px; }
+.kpi-value { font-size: 32px; font-weight: 700; color: #ffffff; line-height: 1; }
+.kpi-sub   { font-size: 12px; color: #52b0e0; margin-top: 5px; }
+
+/* ── Tier badges ── */
+.badge {
+    display: inline-block; border-radius: 12px;
+    padding: 3px 12px; font-size: 12px; font-weight: 600;
+}
+.badge-clear    { background: #0d3349; color: #52b0e0; border: 1px solid #52b0e0; }
+.badge-officer  { background: #3a2e00; color: #f0c040; border: 1px solid #f0c040; }
+.badge-senior   { background: #3a0d0d; color: #e05252; border: 1px solid #e05252; }
+
+/* ── Section titles ── */
+.section-title {
+    font-size: 15px; font-weight: 700; color: #FF6600;
+    text-transform: uppercase; letter-spacing: 1px;
+    border-bottom: 1px solid #1e3a5f; padding-bottom: 6px; margin-bottom: 14px;
+}
+/* ── Footer ── */
+.footer {
+    margin-top: 2rem; padding: 12px 0;
+    border-top: 1px solid #1e3a5f;
+    font-size: 11px; color: #445566; text-align: center;
+}
+</style>
+""", unsafe_allow_html=True)
+
+def bank_header(subtitle="Compliance Monitoring"):
+    st.markdown(f"""
+    <div class="bank-header">
+      <span class="logo">🏦</span>
+      <div>
+        <div class="bank-name">SMBC Vietnam — DDSF</div>
+        <div class="module-name">{subtitle}</div>
+      </div>
+    </div>""", unsafe_allow_html=True)
+
+def kpi_card(label, value, sub=""):
+    st.markdown(f"""
+    <div class="kpi-card">
+      <div class="kpi-label">{label}</div>
+      <div class="kpi-value">{value}</div>
+      <div class="kpi-sub">{sub}</div>
+    </div>""", unsafe_allow_html=True)
+
+def tier_badge(tier):
+    cls = {"Auto-Clear":"badge-clear","Officer Review":"badge-officer",
+           "Senior Escalation":"badge-senior"}.get(tier,"badge-clear")
+    return f'<span class="badge {cls}">{tier}</span>'
 
 # ─────────────────────────────────────────────────────────────────────────────
 # USERS
@@ -265,14 +357,20 @@ def login_page():
     col1, col2, col3 = st.columns([1, 1.5, 1])
     with col2:
         st.markdown("<br><br>", unsafe_allow_html=True)
-        st.markdown(
-            """<div style='text-align:center;'>
-            <h1 style='color:#4fa3e0;'>🏦 DDSF</h1>
-            <p style='color:#aaa;font-size:14px;'>Data-Driven Decision Support Framework<br>
-            AML Transaction Monitoring · Foreign Banks in Vietnam</p>
-            </div>""",
-            unsafe_allow_html=True,
-        )
+        st.markdown("""
+            <div style='text-align:center; padding: 20px 0 10px 0;'>
+              <div style='font-size:42px;'>🏦</div>
+              <div style='font-size:22px; font-weight:700; color:#ffffff; letter-spacing:1px;
+                          margin-top:8px;'>SMBC Vietnam</div>
+              <div style='font-size:12px; color:#FF6600; font-weight:600;
+                          text-transform:uppercase; letter-spacing:2px; margin-top:4px;'>
+                AML Compliance Monitor</div>
+              <div style='height:3px; background:#FF6600; border-radius:2px;
+                          margin: 12px auto; width:60px;'></div>
+              <p style='color:#7a9abf; font-size:13px; margin-top:8px;'>
+                Data-Driven Decision Support Framework<br>
+                KYC Transaction Monitoring · Foreign Banks in Vietnam</p>
+            </div>""", unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
 
         with st.form("login_form"):
@@ -330,50 +428,47 @@ def sidebar(df):
 # PAGE: DASHBOARD
 # ─────────────────────────────────────────────────────────────────────────────
 def page_dashboard(df):
-    st.title("📊 Compliance Dashboard")
-    st.caption("DDSF — Monitoring cycle overview · Sample data (250 accounts)")
+    bank_header("AML Transaction Monitoring Dashboard")
 
-    # KPI row
     total = len(df)
-    ac   = (df["tier"] == "Auto-Clear").sum()
-    orv  = (df["tier"] == "Officer Review").sum()
-    se   = (df["tier"] == "Senior Escalation").sum()
+    ac    = (df["tier"] == "Auto-Clear").sum()
+    orv   = (df["tier"] == "Officer Review").sum()
+    se    = (df["tier"] == "Senior Escalation").sum()
     avg_crs = df["crs"].mean()
 
     c1, c2, c3, c4, c5 = st.columns(5)
-    c1.metric("Total Accounts",       f"{total:,}")
-    c2.metric("Auto-Clear",           f"{ac}",  f"{ac/total*100:.1f}%")
-    c3.metric("Officer Review",       f"{orv}", f"{orv/total*100:.1f}%")
-    c4.metric("Senior Escalation",    f"{se}",  f"{se/total*100:.1f}%")
-    c5.metric("Avg CRS",              f"{avg_crs:.3f}")
+    with c1: kpi_card("Total Accounts", f"{total:,}", "This cycle")
+    with c2: kpi_card("Auto-Clear", str(ac), f"{ac/total*100:.1f}% of portfolio")
+    with c3: kpi_card("Officer Review", str(orv), f"{orv/total*100:.1f}% of portfolio")
+    with c4: kpi_card("Senior Escalation", str(se), f"{se/total*100:.1f}% of portfolio")
+    with c5: kpi_card("Avg CRS", f"{avg_crs:.3f}", "Portfolio risk level")
 
     st.divider()
 
     col_left, col_right = st.columns(2)
 
     with col_left:
-        st.subheader("Tier Distribution")
-        tier_colors = {
-            "Auto-Clear": "#52b0e0",
-            "Officer Review": "#f0c040",
-            "Senior Escalation": "#e05252",
-        }
-        fig, ax = plt.subplots(figsize=(5, 4))
-        fig.patch.set_facecolor("#0f1117")
-        ax.set_facecolor("#0f1117")
-        counts  = [ac, orv, se]
-        labels  = ["Auto-Clear", "Officer Review", "Senior Escalation"]
-        colors  = [tier_colors[l] for l in labels]
-        wedges, texts, autotexts = ax.pie(
-            counts, labels=labels, colors=colors,
-            autopct="%1.1f%%", startangle=90,
-            textprops={"color": "white", "fontsize": 9},
+        st.markdown('<div class="section-title">Tier Distribution</div>', unsafe_allow_html=True)
+        donut = go.Figure(go.Pie(
+            labels=["Auto-Clear", "Officer Review", "Senior Escalation"],
+            values=[ac, orv, se],
+            hole=0.55,
+            marker=dict(colors=["#52b0e0", "#f0c040", "#e05252"],
+                        line=dict(color="#0d1b2e", width=2)),
+            textinfo="label+percent",
+            textfont=dict(size=12, color="white"),
+            hovertemplate="%{label}: %{value} accounts (%{percent})<extra></extra>",
+        ))
+        donut.update_layout(
+            paper_bgcolor="#0d1b2e", plot_bgcolor="#0d1b2e",
+            font=dict(color="white"),
+            showlegend=False, height=300,
+            margin=dict(l=10, r=10, t=10, b=10),
+            annotations=[dict(text=f"<b>{total}</b><br>Accounts",
+                              x=0.5, y=0.5, font_size=14,
+                              font_color="white", showarrow=False)]
         )
-        for at in autotexts:
-            at.set_fontsize(8)
-        plt.tight_layout()
-        st.pyplot(fig)
-        plt.close(fig)
+        st.plotly_chart(donut, use_container_width=True)
 
     with col_right:
         st.subheader("CRS Score Distribution by Tier")
@@ -414,7 +509,7 @@ def page_dashboard(df):
 # PAGE: REVIEW QUEUE
 # ─────────────────────────────────────────────────────────────────────────────
 def page_review_queue(df):
-    st.title("📋 Review Queue")
+    bank_header("Compliance Review Queue")
     role = st.session_state.user["role"]
 
     if role == "Compliance Officer":
@@ -468,7 +563,7 @@ def page_review_queue(df):
 # PAGE: ACCOUNT INSPECTOR
 # ─────────────────────────────────────────────────────────────────────────────
 def page_account_inspector(df):
-    st.title("🔍 Account Inspector")
+    bank_header("Account Risk Inspector — SHAP Explainability")
 
     col_sel, col_tier = st.columns([2, 1])
     with col_tier:
