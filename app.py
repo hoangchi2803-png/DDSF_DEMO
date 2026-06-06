@@ -187,10 +187,10 @@ def compute_shap_values(row):
 def waterfall_chart(baseline, shap_vals, pred):
     """Draw SHAP waterfall plot."""
     items = sorted(shap_vals.items(), key=lambda x: abs(x[1]), reverse=True)[:8]
-    labels = [k.replace("_", "\n") for k, _ in items]
+    labels = [k.replace("_", " ") for k, _ in items]
     vals   = [v for _, v in items]
 
-    fig, ax = plt.subplots(figsize=(9, 6))
+    fig, ax = plt.subplots(figsize=(10, 7))
     fig.patch.set_facecolor("#0f1117")
     ax.set_facecolor("#0f1117")
 
@@ -199,27 +199,30 @@ def waterfall_chart(baseline, shap_vals, pred):
 
     for i, v in enumerate(vals):
         color = "#e05252" if v > 0 else "#52b0e0"
-        ax.barh(i, v, left=running, color=color, height=0.6, edgecolor="none")
-        offset = 0.003 if v > 0 else -0.003
-        ha = "left" if v > 0 else "right"
-        ax.text(running + v + offset, i, f"{v:+.4f}",
-                va="center", ha=ha, fontsize=9, color="white")
+        ax.barh(i, v, left=running, color=color, height=0.55, edgecolor="none")
+        # value label inside bar centre
+        bar_centre = running + v / 2
+        ax.text(bar_centre, i, f"{v:+.4f}",
+                va="center", ha="center", fontsize=9,
+                color="white", fontweight="bold")
         running += v
 
-    ax.axvline(baseline, color="#888", linestyle="--", linewidth=1.0,
+    ax.axvline(baseline, color="#aaa", linestyle="--", linewidth=1.0,
                label=f"Baseline = {baseline:.3f}")
     ax.axvline(pred, color="#f0c040", linestyle="-", linewidth=1.5,
                label=f"Prediction = {pred:.3f}")
 
     ax.set_yticks(y_pos)
-    ax.set_yticklabels(labels, color="white", fontsize=10)
-    ax.set_xlabel("SHAP contribution", color="white", fontsize=10)
-    ax.tick_params(colors="white", labelsize=9)
+    ax.set_yticklabels(labels, color="white", fontsize=11)
+    ax.set_xlabel("SHAP value (impact on model output)", color="white", fontsize=10)
+    ax.tick_params(axis="x", colors="white", labelsize=9)
+    ax.tick_params(axis="y", colors="white", labelsize=11, length=0)
     for spine in ax.spines.values():
-        spine.set_edgecolor("#444")
+        spine.set_edgecolor("#333")
     ax.legend(fontsize=9, facecolor="#1a1d27", labelcolor="white",
-               loc="lower right", framealpha=0.9)
-    plt.tight_layout(pad=1.5)
+               loc="upper right", framealpha=0.9)
+    # Extra left margin for labels
+    plt.subplots_adjust(left=0.28, right=0.97, top=0.95, bottom=0.10)
     return fig
 
 
