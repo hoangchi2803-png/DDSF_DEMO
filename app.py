@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
+import plotly.graph_objects as go
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PAGE CONFIG
@@ -185,44 +185,65 @@ def compute_shap_values(row):
 
 
 def waterfall_chart(baseline, shap_vals, pred):
-    """Draw SHAP waterfall plot."""
+    """Draw SHAP waterfall using Plotly."""
     items = sorted(shap_vals.items(), key=lambda x: abs(x[1]), reverse=True)[:8]
-    labels = [k.replace("_", " ") for k, _ in items]
+    # Reverse so most important is at top
+    items = list(reversed(items))
+    labels = [k.replace("_", " ").title() for k, _ in items]
     vals   = [v for _, v in items]
 
-    fig, ax = plt.subplots(figsize=(10, 7))
-    fig.patch.set_facecolor("#0f1117")
-    ax.set_facecolor("#0f1117")
+    colors = ["#e05252" if v > 0 else "#52b0e0" for v in vals]
 
+    # Compute running totals for waterfall
     running = baseline
-    y_pos = list(range(len(vals)))
-
-    for i, v in enumerate(vals):
-        color = "#e05252" if v > 0 else "#52b0e0"
-        ax.barh(i, v, left=running, color=color, height=0.55, edgecolor="none")
-        # value label inside bar centre
-        bar_centre = running + v / 2
-        ax.text(bar_centre, i, f"{v:+.4f}",
-                va="center", ha="center", fontsize=9,
-                color="white", fontweight="bold")
+    lefts = []
+    for v in vals:
+        lefts.append(running)
         running += v
 
-    ax.axvline(baseline, color="#aaa", linestyle="--", linewidth=1.0,
-               label=f"Baseline = {baseline:.3f}")
-    ax.axvline(pred, color="#f0c040", linestyle="-", linewidth=1.5,
-               label=f"Prediction = {pred:.3f}")
+    fig = go.Figure()
 
-    ax.set_yticks(y_pos)
-    ax.set_yticklabels(labels, color="white", fontsize=11)
-    ax.set_xlabel("SHAP value (impact on model output)", color="white", fontsize=10)
-    ax.tick_params(axis="x", colors="white", labelsize=9)
-    ax.tick_params(axis="y", colors="white", labelsize=11, length=0)
-    for spine in ax.spines.values():
-        spine.set_edgecolor("#333")
-    ax.legend(fontsize=9, facecolor="#1a1d27", labelcolor="white",
-               loc="upper right", framealpha=0.9)
-    # Extra left margin for labels
-    plt.subplots_adjust(left=0.28, right=0.97, top=0.95, bottom=0.10)
+    # Invisible base bars
+    fig.add_trace(go.Bar(
+        x=lefts, y=labels, orientation="h",
+        marker=dict(color="rgba(0,0,0,0)"),
+        hoverinfo="skip", showlegend=False,
+    ))
+
+    # Actual value bars
+    fig.add_trace(go.Bar(
+        x=vals, y=labels, orientation="h",
+        marker=dict(color=colors),
+        text=[f"{v:+.4f}" for v in vals],
+        textposition="inside",
+        textfont=dict(color="white", size=12),
+        hovertemplate="%{y}: %{x:+.4f}<extra></extra>",
+        name="SHAP value",
+        showlegend=False,
+    ))
+
+    # Baseline and prediction lines
+    fig.add_vline(x=baseline, line_dash="dash", line_color="#aaaaaa",
+                  annotation_text=f"Baseline={baseline:.3f}",
+                  annotation_font_color="#aaaaaa", annotation_position="top right")
+    fig.add_vline(x=pred, line_dash="solid", line_color="#f0c040",
+                  annotation_text=f"Prediction={pred:.3f}",
+                  annotation_font_color="#f0c040", annotation_position="top left")
+
+    fig.update_layout(
+        barmode="stack",
+        paper_bgcolor="#0f1117",
+        plot_bgcolor="#0f1117",
+        font=dict(color="white", size=13),
+        height=420,
+        margin=dict(l=20, r=30, t=30, b=40),
+        xaxis=dict(
+            title="SHAP value (impact on model output)",
+            color="white", gridcolor="#333",
+            zeroline=True, zerolinecolor="#555",
+        ),
+        yaxis=dict(color="white", tickfont=dict(size=13)),
+    )
     return fig
 
 
@@ -488,8 +509,7 @@ def page_account_inspector(df):
         st.subheader("SHAP Explanation — Feature Contributions")
         baseline, shap_vals = compute_shap_values(row)
         fig = waterfall_chart(baseline, shap_vals, float(row["phat_sar"]))
-        st.pyplot(fig)
-        plt.close(fig)
+        st.plotly_chart(fig, use_container_width=True)
         st.caption(
             "SHAP waterfall: red bars increase risk score, blue bars decrease it. "
             "Computed using TreeSHAP approximation (Lundberg & Lee, 2017)."
