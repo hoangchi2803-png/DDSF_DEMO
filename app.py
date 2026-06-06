@@ -471,10 +471,11 @@ def page_dashboard(df):
         st.plotly_chart(donut, use_container_width=True)
 
     with col_right:
-        st.subheader("CRS Score Distribution by Tier")
+        st.markdown('<div class="section-title">CRS Score Distribution by Tier</div>', unsafe_allow_html=True)
+        tier_colors = {"Auto-Clear": "#52b0e0", "Officer Review": "#f0c040", "Senior Escalation": "#e05252"}
         fig2, ax2 = plt.subplots(figsize=(5, 4))
-        fig2.patch.set_facecolor("#0f1117")
-        ax2.set_facecolor("#0f1117")
+        fig2.patch.set_facecolor("#0d1b2e")
+        ax2.set_facecolor("#0d1b2e")
         for tier, color in tier_colors.items():
             subset = df[df["tier"] == tier]["crs"]
             ax2.hist(subset, bins=20, alpha=0.7, color=color, label=tier, edgecolor="none")
