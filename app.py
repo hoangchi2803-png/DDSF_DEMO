@@ -425,8 +425,8 @@ def page_review_queue(df):
     styled = (
         queue_df[display_cols]
         .style
-        .applymap(color_tier, subset=["tier"])
-        .applymap(color_crs,  subset=["crs"])
+        .map(color_tier, subset=["tier"])
+        .map(color_crs,  subset=["crs"])
         .format({
             "crs": "{:.4f}", "phat_sar": "{:.4f}",
             "vrfs": "{:.4f}", "amount_cv": "{:.3f}",
