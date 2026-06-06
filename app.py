@@ -190,7 +190,7 @@ def waterfall_chart(baseline, shap_vals, pred):
     labels = [k.replace("_", "\n") for k, _ in items]
     vals   = [v for _, v in items]
 
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(9, 6))
     fig.patch.set_facecolor("#0f1117")
     ax.set_facecolor("#0f1117")
 
@@ -199,24 +199,27 @@ def waterfall_chart(baseline, shap_vals, pred):
 
     for i, v in enumerate(vals):
         color = "#e05252" if v > 0 else "#52b0e0"
-        ax.barh(i, v, left=running, color=color, height=0.55, edgecolor="none")
+        ax.barh(i, v, left=running, color=color, height=0.6, edgecolor="none")
+        offset = 0.003 if v > 0 else -0.003
+        ha = "left" if v > 0 else "right"
+        ax.text(running + v + offset, i, f"{v:+.4f}",
+                va="center", ha=ha, fontsize=9, color="white")
         running += v
-        ax.text(running + 0.002 * (1 if v > 0 else -1),
-                i, f"{v:+.3f}", va="center",
-                ha="left" if v > 0 else "right",
-                fontsize=8, color="white")
 
-    ax.axvline(baseline, color="#888", linestyle="--", linewidth=0.8, label=f"Baseline = {baseline:.3f}")
-    ax.axvline(pred,     color="#f0c040", linestyle="-", linewidth=1.2, label=f"Prediction = {pred:.3f}")
+    ax.axvline(baseline, color="#888", linestyle="--", linewidth=1.0,
+               label=f"Baseline = {baseline:.3f}")
+    ax.axvline(pred, color="#f0c040", linestyle="-", linewidth=1.5,
+               label=f"Prediction = {pred:.3f}")
 
     ax.set_yticks(y_pos)
-    ax.set_yticklabels(labels, color="white", fontsize=8)
-    ax.set_xlabel("SHAP contribution", color="white", fontsize=9)
-    ax.tick_params(colors="white")
+    ax.set_yticklabels(labels, color="white", fontsize=10)
+    ax.set_xlabel("SHAP contribution", color="white", fontsize=10)
+    ax.tick_params(colors="white", labelsize=9)
     for spine in ax.spines.values():
         spine.set_edgecolor("#444")
-    ax.legend(fontsize=8, facecolor="#222", labelcolor="white", loc="lower right")
-    plt.tight_layout()
+    ax.legend(fontsize=9, facecolor="#1a1d27", labelcolor="white",
+               loc="lower right", framealpha=0.9)
+    plt.tight_layout(pad=1.5)
     return fig
 
 
