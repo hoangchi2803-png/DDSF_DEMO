@@ -295,8 +295,11 @@ def generate_accounts(n: int = 280, seed: int = 42) -> pd.DataFrame:
     ).clip(0, 1)
 
     # ── SAR ground-truth label (demo only) ────────────────────────────────────
-    is_sar = (crs > 0.55) & (rng.random(n) < 0.55)
-    is_sar |= (jurisdiction_risk == 3) & (rng.random(n) < 0.40)
+    # Use phat_sar (raw ML score) so SAR distributes across all tiers:
+    #   Auto-Clear: ~0-1% | Officer Review: ~4-8% | Senior Escalation: ~20-30%
+    is_sar = (phat_sar > 0.52) & (rng.random(n) < 0.50)          # hits Senior mostly
+    is_sar |= (phat_sar > 0.35) & (~is_sar) & (rng.random(n) < 0.07)  # some Officer Review
+    is_sar |= (jurisdiction_risk == 3) & (rng.random(n) < 0.40)  # high-risk jurisdictions
 
     account_ids = [f"ACC-{10000 + i}" for i in range(n)]
 
