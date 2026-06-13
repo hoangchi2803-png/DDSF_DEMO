@@ -1,8 +1,7 @@
 # DDSF — Data-Driven Decision Support Framework
 ## AML Transaction Monitoring for Foreign Banks in Vietnam
 
-This is the interactive demo application for the undergraduate thesis:
-> **"Designing a Data-Driven Decision Support Framework for Corporate KYC Ongoing Transaction Monitoring: A Case Study of Foreign Banks in Vietnam"**  
+This is the interactive demo application for the undergraduate thesis.  
 > Author: Hoang Yen Chi | Foreign Trade University
 
 ---
